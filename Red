@@ -1,0 +1,114 @@
+-- Roblox Hard Lock Aimbot with Rainbow Button
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- ตั้งค่า Aimbot
+local FOV_RADIUS = 300 -- ระยะการค้นหาเป้าหมาย
+local AIM_PART = "Head" -- ส่วนที่จะล็อก (Head หรือ HumanoidRootPart)
+local LOCK_KEY = Enum.KeyCode.E -- ปุ่มเปิด/ปิด สำหรับ PC
+
+local aimbotEnabled = false
+local currentTarget = nil
+
+-- ฟังก์ชันหาผู้เล่นที่ใกล้ศูนย์กลางหน้าจอที่สุด
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = FOV_RADIUS
+    local viewportCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(AIM_PART) and player.Character:FindFirstChild("Humanoid") then
+            if player.Character.Humanoid.Health > 0 then
+                local partPos, onScreen = Camera:WorldToViewportPoint(player.Character[AIM_PART].Position)
+                if onScreen then
+                    local distance = (Vector2.new(partPos.X, partPos.Y) - viewportCenter).Magnitude
+                    if distance < shortestDistance then
+                        closestPlayer = player.Character[AIM_PART]
+                        shortestDistance = distance
+                    end
+                end
+            end
+        end
+    end
+    return closestPlayer
+end
+
+-- สร้าง GUI ปุ่มเปิด/ปิด
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RainbowAimbotGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Name = "AimbotToggle"
+button.Size = UDim2.new(0, 90, 0, 45) -- ขนาดกะทัดรัด พอดีตา
+button.Position = UDim2.new(0.85, 0, 0.35, 0)
+button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Text = "LOCK: OFF"
+button.TextSize = 14
+button.Font = Enum.Font.SourceSansBold
+button.Active = true
+button.Draggable = true -- สามารถลากปุ่มย้ายตำแหน่งได้
+button.Parent = screenGui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 10)
+uiCorner.Parent = button
+
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Thickness = 2
+uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uiStroke.Parent = button
+
+-- ระบบเปลี่ยนสีสายรุ้งกระพริบ (Rainbow Effect Loop)
+local hue = 0
+RunService.RenderStepped:Connect(function(deltaTime)
+    hue = (hue + deltaTime * 0.5) % 1 -- ปรับความเร็วการเปลี่ยนสีได้ตรงนี้
+    local rainbowColor = Color3.fromHSV(hue, 1, 1)
+    
+    if aimbotEnabled then
+        button.BackgroundColor3 = rainbowColor
+        uiStroke.Color = Color3.fromRGB(255, 255, 255)
+    else
+        button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        uiStroke.Color = rainbowColor
+    end
+end)
+
+-- ฟังก์ชันสลับสถานะเปิด/ปิด
+local function toggleAimbot()
+    aimbotEnabled = not aimbotEnabled
+    if aimbotEnabled then
+        button.Text = "LOCK: ON"
+    else
+        button.Text = "LOCK: OFF"
+        currentTarget = nil
+    end
+end
+
+button.MouseButton1Click:Connect(toggleAimbot)
+
+-- ปุ่มสำหรับ PC
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == LOCK_KEY then
+            toggleAimbot()
+        end
+    end)
+
+-- ลูปล็อกเป้าหมายแบบ Hard Lock (หันหน้าจอติดตามทันที)
+RunService.RenderStepped:Connect(function()
+    if aimbotEnabled then
+        if not currentTarget or not currentTarget.Parent or not currentTarget.Parent:FindFirstChild("Humanoid") or currentTarget.Parent.Humanoid.Health <= 0 then
+            currentTarget = getClosestPlayer()
+        end
+        
+        if currentTarget then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, currentTarget.Position)
+        end
+    end
+end)
