@@ -1,0 +1,410 @@
+-- Roblox Delta Blue Theme UI Script (Fixed & Gun Mode Included)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+-- ลบ GUI เก่าหากรันซ้ำ
+if game.CoreGui:FindFirstChild("DeltaBlue_Menu_GUI") then
+    game.CoreGui.DeltaBlue_Menu_GUI:Destroy()
+end
+
+-- GUI Main Container
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaBlue_Menu_GUI"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+---------------------------------------------------------
+-- 🔘 ปุ่มลอยเปิด-ปิดเมนู (Toggle Logo Button)
+---------------------------------------------------------
+local ToggleBtn = Instance.new("ImageButton")
+ToggleBtn.Name = "FloatingToggleBtn"
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.Position = UDim2.new(0.02, 0, 0.2, 0)
+ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 40, 75)
+ToggleBtn.Image = "rbxassetid://6031068421" -- ไอคอน Delta/Shield
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleBtn
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(80, 120, 255)
+ToggleStroke.Thickness = 2
+ToggleStroke.Parent = ToggleBtn
+
+---------------------------------------------------------
+-- 🖼️ UI Frame หลัก (สไตล์ Delta Blue Menu)
+---------------------------------------------------------
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 480, 0, 300)
+MainFrame.BackgroundColor3 = Color3.fromRGB(24, 27, 40)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = true
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+
+-- Header Bar
+local Header = Instance.new("Frame")
+Header.Parent = MainFrame
+Header.Size = UDim2.new(1, 0, 0, 35)
+Header.BackgroundColor3 = Color3.fromRGB(20, 22, 32)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
+
+local Title = Instance.new("TextLabel")
+Title.Parent = Header
+Title.Position = UDim2.new(0.03, 0, 0, 0)
+Title.Size = UDim2.new(0.5, 0, 1, 0)
+Title.Text = "Delta Blue Menu"
+Title.TextColor3 = Color3.fromRGB(220, 230, 255)
+Title.TextSize = 15
+Title.Font = Enum.Font.SourceSansBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.BackgroundTransparency = 1
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Header
+CloseBtn.Position = UDim2.new(0.92, 0, 0.1, 0)
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(180, 190, 210)
+CloseBtn.TextSize = 16
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.BackgroundTransparency = 1
+
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- Left Sidebar (แท็บเมนูด้านซ้าย)
+local Sidebar = Instance.new("Frame")
+Sidebar.Parent = MainFrame
+Sidebar.Position = UDim2.new(0, 0, 0, 35)
+Sidebar.Size = UDim2.new(0, 130, 1, -35)
+Sidebar.BackgroundColor3 = Color3.fromRGB(20, 22, 34)
+
+local TabMainBtn = Instance.new("TextButton")
+TabMainBtn.Parent = Sidebar
+TabMainBtn.Position = UDim2.new(0.08, 0, 0.04, 0)
+TabMainBtn.Size = UDim2.new(0.84, 0, 0, 32)
+TabMainBtn.Text = "ฟังก์ชั่นหลัก"
+TabMainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TabMainBtn.BackgroundColor3 = Color3.fromRGB(70, 80, 240)
+TabMainBtn.Font = Enum.Font.SourceSansBold
+TabMainBtn.TextSize = 13
+Instance.new("UICorner", TabMainBtn).CornerRadius = UDim.new(0, 6)
+
+local TabGunBtn = Instance.new("TextButton")
+TabGunBtn.Parent = Sidebar
+TabGunBtn.Position = UDim2.new(0.08, 0, 0.18, 0)
+TabGunBtn.Size = UDim2.new(0.84, 0, 0, 32)
+TabGunBtn.Text = "ระบบยิง (Gun Mode)"
+TabGunBtn.TextColor3 = Color3.fromRGB(160, 170, 200)
+TabGunBtn.BackgroundColor3 = Color3.fromRGB(30, 33, 48)
+TabGunBtn.Font = Enum.Font.SourceSansBold
+TabGunBtn.TextSize = 13
+Instance.new("UICorner", TabGunBtn).CornerRadius = UDim.new(0, 6)
+
+-- Right Content Container
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Parent = MainFrame
+ContentFrame.Position = UDim2.new(0, 135, 0, 40)
+ContentFrame.Size = UDim2.new(1, -140, 1, -45)
+ContentFrame.BackgroundTransparency = 1
+
+-- Container สำหรับ 2 หน้าแท็บ
+local MainScroll = Instance.new("ScrollingFrame")
+MainScroll.Parent = ContentFrame
+MainScroll.Size = UDim2.new(1, 0, 1, 0)
+MainScroll.BackgroundTransparency = 1
+MainScroll.ScrollBarThickness = 3
+MainScroll.Visible = true
+
+local GunScroll = Instance.new("ScrollingFrame")
+GunScroll.Parent = ContentFrame
+GunScroll.Size = UDim2.new(1, 0, 1, 0)
+GunScroll.BackgroundTransparency = 1
+GunScroll.ScrollBarThickness = 3
+GunScroll.Visible = false
+
+-- สลับแท็บ
+TabMainBtn.MouseButton1Click:Connect(function()
+    MainScroll.Visible = true
+    GunScroll.Visible = false
+    TabMainBtn.BackgroundColor3 = Color3.fromRGB(70, 80, 240)
+    TabMainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TabGunBtn.BackgroundColor3 = Color3.fromRGB(30, 33, 48)
+    TabGunBtn.TextColor3 = Color3.fromRGB(160, 170, 200)
+end)
+
+TabGunBtn.MouseButton1Click:Connect(function()
+    MainScroll.Visible = false
+    GunScroll.Visible = true
+    TabGunBtn.BackgroundColor3 = Color3.fromRGB(70, 80, 240)
+    TabGunBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TabMainBtn.BackgroundColor3 = Color3.fromRGB(30, 33, 48)
+    TabMainBtn.TextColor3 = Color3.fromRGB(160, 170, 200)
+end)
+
+---------------------------------------------------------
+-- ⚙️ ฟังก์ชันสร้างปุ่มสวิตช์ Toggle UI
+---------------------------------------------------------
+local function createCategoryHeader(parent, text, posY)
+    local header = Instance.new("TextLabel")
+    header.Parent = parent
+    header.Position = UDim2.new(0, 0, 0, posY)
+    header.Size = UDim2.new(1, 0, 0, 26)
+    header.BackgroundColor3 = Color3.fromRGB(60, 70, 220)
+    header.Text = "  " .. text
+    header.TextColor3 = Color3.fromRGB(255, 255, 255)
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.Font = Enum.Font.SourceSansBold
+    header.TextSize = 13
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 6)
+    return header
+end
+
+local function createToggleRow(parent, text, posY)
+    local row = Instance.new("Frame")
+    row.Parent = parent
+    row.Position = UDim2.new(0, 0, 0, posY)
+    row.Size = UDim2.new(1, 0, 0, 34)
+    row.BackgroundColor3 = Color3.fromRGB(30, 33, 48)
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
+
+    -- ปุ่มวงกลม Toggle Icon ด้านซ้าย
+    local toggleCircle = Instance.new("Frame")
+    toggleCircle.Parent = row
+    toggleCircle.Position = UDim2.new(0.04, 0, 0.22, 0)
+    toggleCircle.Size = UDim2.new(0, 18, 0, 18)
+    toggleCircle.BackgroundColor3 = Color3.fromRGB(20, 22, 32)
+    Instance.new("UICorner", toggleCircle).CornerRadius = UDim.new(1, 0)
+
+    local circleStroke = Instance.new("UIStroke")
+    circleStroke.Color = Color3.fromRGB(100, 110, 140)
+    circleStroke.Thickness = 2
+    circleStroke.Parent = toggleCircle
+
+    local innerDot = Instance.new("Frame")
+    innerDot.Parent = toggleCircle
+    innerDot.Position = UDim2.new(0.2, 0, 0.2, 0)
+    innerDot.Size = UDim2.new(0.6, 0, 0.6, 0)
+    innerDot.BackgroundColor3 = Color3.fromRGB(80, 220, 120)
+    innerDot.Visible = false
+    Instance.new("UICorner", innerDot).CornerRadius = UDim.new(1, 0)
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Position = UDim2.new(0.13, 0, 0, 0)
+    label.Size = UDim2.new(0.8, 0, 1, 0)
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(220, 220, 230)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 13
+    label.BackgroundTransparency = 1
+
+    local btn = Instance.new("TextButton")
+    btn.Parent = row
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        innerDot.Visible = state
+        circleStroke.Color = state and Color3.fromRGB(80, 220, 120) or Color3.fromRGB(100, 110, 140)
+    end)
+
+    return btn, function() return state end
+end
+
+---------------------------------------------------------
+-- 📋 เมนูในแท็บ 1: ฟังก์ชั่นหลัก
+---------------------------------------------------------
+createCategoryHeader(MainScroll, "ระบบควบคุมตัวละคร", 0)
+
+local NoclipBtn, isNoclip = createToggleRow(MainScroll, "เดินทะลุกำแพง (Noclip)", 32)
+local SpeedBtn, isSpeed = createToggleRow(MainScroll, "วิ่งเร็ว (Speed 60)", 70)
+local InfJumpBtn, isInfJump = createToggleRow(MainScroll, "กระโดดไม่จำกัด (Infinite Jump)", 108)
+local FlyBtn, isFly = createToggleRow(MainScroll, "บินได้ (Fly - บินตามทิศทางกระโดด/กดเดิน)", 146)
+
+---------------------------------------------------------
+-- 🎯 เมนูในแท็บ 2: ระบบยิง (Gun Mode)
+---------------------------------------------------------
+createCategoryHeader(GunScroll, "ระบบยิงและช่วยเหลือ (Gun Helper)", 0)
+
+local FOVBtn, isFOV = createToggleRow(GunScroll, "เปิดวงกลม FOV", 32)
+local AimBtn, isAimbot = createToggleRow(GunScroll, "ล็อกเป้า 100% (Aimbot)", 70)
+local ESPBtn, isESP = createToggleRow(GunScroll, "มองทะลุ (ESP Box & Name)", 108)
+local HitboxBtn, isHitbox = createToggleRow(GunScroll, "ขยายฮิตบ็อกซ์ตัวศัตรู (Hitbox Expander)", 146)
+
+---------------------------------------------------------
+-- 🔴 ระบบ LOGIC & การทำงานหลัก (แก้บั๊กทั้งหมด)
+---------------------------------------------------------
+
+-- 1. ⭕ วงกลม FOV กลางจอ
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1.5
+FOVCircle.Color = Color3.fromRGB(80, 160, 255)
+FOVCircle.Radius = 120
+FOVCircle.Filled = false
+FOVCircle.Visible = false
+
+-- 2. 🦘 แก้บั๊ก Infinite Jump (ทำงานชัวร์ 100%)
+UserInputService.JumpRequest:Connect(function()
+    if isInfJump() then
+        local char = LocalPlayer.Character
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end
+end)
+
+-- 3. 🎯 ฟังก์ชันหาศัตรูที่ใกล้เป้าที่สุด (สำหรับ Aimbot)
+local function getClosestPlayer()
+    local closest = nil
+    local shortestDist = FOVCircle.Radius
+    local mousePos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health > 0 then
+                local pos, onScreen = Camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closest = plr
+                    end
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- 4. 👁️ ระบบ ESP มองทะลุ (Box & Name)
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "ESP_Storage"
+ESPFolder.Parent = ScreenGui
+
+local function updateESP()
+    ESPFolder:ClearAllChildren()
+    if not isESP() then return end
+
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local char = plr.Character
+            local bb = Instance.new("BillboardGui")
+            bb.Parent = ESPFolder
+            bb.Adornee = char:FindFirstChild("Head") or char.HumanoidRootPart
+            bb.Size = UDim2.new(0, 100, 0, 40)
+            bb.StudsOffset = Vector3.new(0, 2.5, 0)
+            bb.AlwaysOnTop = true
+
+            local txt = Instance.new("TextLabel")
+            txt.Parent = bb
+            txt.Size = UDim2.new(1, 0, 1, 0)
+            txt.Text = plr.Name .. "\n[" .. math.floor((plr.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude) .. "m]"
+            txt.TextColor3 = Color3.fromRGB(255, 60, 60)
+            txt.TextSize = 12
+            txt.Font = Enum.Font.SourceSansBold
+            txt.BackgroundTransparency = 1
+            txt.TextStrokeTransparency = 0
+        end
+    end
+end
+
+-- 5. 🔄 Main Loop (RenderStepped & Stepped)
+RunService.Stepped:Connect(function()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+
+    if not humanoid or not hrp then return end
+
+    -- เดินทะลุกำแพง (Noclip)
+    if isNoclip() then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+
+    -- วิ่งเร็ว (Speed)
+    if isSpeed() then
+        humanoid.WalkSpeed = 60
+    else
+        if humanoid.WalkSpeed == 60 then
+            humanoid.WalkSpeed = 16
+        end
+    end
+
+    -- ✈️ แก้บั๊ก Fly (บินไม่พุ่งไปเอง คุมตามปุ่มเดิน)
+    if isFly() then
+        local moveDir = humanoid.MoveDirection
+        if moveDir.Magnitude > 0 then
+            hrp.Velocity = (moveDir * 50) + Vector3.new(0, 1, 0)
+        else
+            hrp.Velocity = Vector3.new(0, 1, 0) -- ลอยอยู่นิ่งๆ ไม่พุ่งมั่ว
+        end
+    end
+
+    -- 📦 ขยาย Hitbox ศัตรู
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local targetHRP = plr.Character.HumanoidRootPart
+            if isHitbox() then
+                targetHRP.Size = Vector3.new(12, 12, 12)
+                targetHRP.Transparency = 0.7
+                targetHRP.BrickColor = BrickColor.new("Really blue")
+                targetHRP.CanCollide = false
+            else
+                targetHRP.Size = Vector3.new(2, 2, 1)
+                targetHRP.Transparency = 1
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    -- อัปเดตวงกลม FOV
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Visible = isFOV()
+
+    -- 🎯 Aimbot ล็อกเป้า
+    if isAimbot() then
+        local target = getClosestPlayer()
+        if target and target.Character then
+            local head = target.Character:FindFirstChild("Head") or target.Character:FindFirstChild("HumanoidRootPart")
+            if head then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)
+            end
+        end
+    end
+
+    -- อัปเดตมองทะลุ ESP
+    updateESP()
+end)
