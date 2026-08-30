@@ -1,0 +1,119 @@
+-- โหลด Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- สร้าง UI Main Window
+local Window = Rayfield:CreateWindow({
+   Name = "Pilfering Pirates Hub",
+   LoadingTitle = "กำลังโหลดสคริปต์...",
+   LoadingSubtitle = "Delta Supported",
+   ConfigurationSaving = { Enabled = false },
+   Discord = { Enabled = false },
+   KeySystem = false
+})
+
+-- สร้าง Tab เมนูหลัก
+local MainTab = Window:CreateTab("หลัก", 4483362458)
+
+-- Variables สำหรับจัดการสถานะฟังก์ชัน
+local InfiniteShootEnabled = false
+local JesusFlyEnabled = false
+local WaterPart = nil
+
+-- ----------------------------------------
+-- 1. ฟังก์ชันยิงรัว / ยิงไม่จำกัด (Auto Fire Loop)
+-- ----------------------------------------
+MainTab:CreateToggle({
+   Name = "ยิงไม่จำกัด / ยิงรัว (Infinite & Fast Fire)",
+   CurrentValue = false,
+   Flag = "InfShoot",
+   Callback = function(Value)
+       InfiniteShootEnabled = Value
+       if Value then
+           task.spawn(function()
+               while InfiniteShootEnabled do
+                   local char = game.Players.LocalPlayer.Character
+                   if char then
+                       -- ค้นหาปืนหรือระเบิดที่ถืออยู่
+                       local tool = char:FindFirstChildOfClass("Tool")
+                       if tool then
+                           -- เปิดใช้งาน Tool (ยิง/ขว้าง)
+                           tool:Activate()
+                       end
+                   end
+                   task.wait(0.05) -- ความเร็วในการยิงรัว (ปรับให้เร็วขึ้นหรือชะลอลงได้)
+               end
+           end)
+       end
+   end,
+})
+
+-- ----------------------------------------
+-- 2. ฟังก์ชันเดินบนน้ำ (Jesus Walk / Walk on Water)
+-- ----------------------------------------
+MainTab:CreateToggle({
+   Name = "เดินบนน้ำ (Walk on Water)",
+   CurrentValue = false,
+   Flag = "JesusFly",
+   Callback = function(Value)
+       JesusFlyEnabled = Value
+       
+       if JesusFlyEnabled then
+           -- สร้างบล็อกล่องหนมารองรับใต้เท้าระดับน้ำ
+           if not WaterPart then
+               WaterPart = Instance.new("Part")
+               WaterPart.Name = "JesusPlatform"
+               WaterPart.Size = Vector3.new(5000, 1, 5000)
+               WaterPart.Position = Vector3.new(0, 0, 0) -- ระดับความสูงของน้ำในแมพ
+               WaterPart.Anchored = true
+               WaterPart.CanCollide = true
+               WaterPart.Transparency = 0.8
+               WaterPart.Color = Color3.fromRGB(0, 255, 255)
+               WaterPart.Parent = workspace
+           end
+       else
+           -- ลบออกเมื่อปิดใช้งาน
+           if WaterPart then
+               WaterPart:Destroy()
+               WaterPart = nil
+           end
+       end
+   end,
+})
+
+-- ----------------------------------------
+-- 3. ปุ่ม Toggle เปิด/ปิดหน้าจอ UI เมนู (สำหรับมือถือ)
+-- ----------------------------------------
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleButton = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+
+ScreenGui.Name = "DeltaToggleButtonGui"
+ScreenGui.Parent = game.CoreGui
+
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+ToggleButton.Position = UDim2.new(0.02, 0, 0.2, 0)
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "MENU"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14.00
+ToggleButton.Active = true
+ToggleButton.Draggable = true -- สามารถลากปุ่มไปวางตำแหน่งที่ต้องการได้
+
+UICorner.CornerRadius = UDim.new(1, 0)
+UICorner.Parent = ToggleButton
+
+-- Toggle UI visibility เมื่อคลิกปุ่ม
+ToggleButton.MouseButton1Click:Connect(function()
+    if game.CoreGui:FindFirstChild("Rayfield") then
+        game.CoreGui.Rayfield.Enabled = not game.CoreGui.Rayfield.Enabled
+    end
+end)
+
+Rayfield:Notify({
+   Title = "โหลดสคริปต์เรียบร้อย",
+   Content = "ใช้ปุ่ม MENU วงกลมเพื่อ ซ่อน/เปิด หน้าต่าง",
+   Duration = 5,
+})
