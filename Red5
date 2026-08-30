@@ -1,0 +1,82 @@
+-- ========================================
+-- สร้าง Tab ใหม่: เมนู ESP / มองทะลุ (Visuals)
+-- ========================================
+local ESPTab = Window:CreateTab("มองทะลุ (ESP)", 4483362458)
+
+local ESPEnabled = false
+local ESPColor = Color3.fromRGB(255, 0, 0) -- ค่าสีเริ่มต้น (สีแดง)
+
+-- ฟังก์ชันสำหรับสร้าง/ลบ Highlight ให้ตัวละครผู้เล่นอื่น
+local function ApplyESP(player)
+    if player ~= LocalPlayer then
+        local function AddHighlight(character)
+            if not character:FindFirstChild("ESPHighlight") then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "ESPHighlight"
+                highlight.FillColor = ESPColor
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                highlight.FillTransparency = 0.5
+                highlight.OutlineTransparency = 0
+                highlight.Adornee = character
+                highlight.Parent = character
+            end
+        end
+
+        if player.Character then
+            AddHighlight(player.Character)
+        end
+
+        player.CharacterAdded:Connect(function(newChar)
+            if ESPEnabled then
+                task.wait(0.5)
+                AddHighlight(newChar)
+            end
+        end)
+    end
+end
+
+-- 1. ปุ่มเปิด-ปิด มองทะลุ (ESP Toggle)
+ESPTab:CreateToggle({
+   Name = "เปิดใช้งาน ESP (มองทะลุผู้เล่น)",
+   CurrentValue = false,
+   Flag = "ESPToggle",
+   Callback = function(Value)
+       ESPEnabled = Value
+       if Value then
+           -- เปิดใช้งาน ESP ให้ทุกคนในเซิร์ฟเวอร์
+           for _, player in pairs(Players:GetPlayers()) do
+               ApplyESP(player)
+           end
+           
+           -- ตรวจจับผู้เล่นที่เพิ่งเข้ามาใหม่
+           Players.PlayerAdded:Connect(function(player)
+               if ESPEnabled then
+                   ApplyESP(player)
+               end
+           end)
+       else
+           -- ลบ Highlight ออกเมื่อปิดใช้งาน
+           for _, player in pairs(Players:GetPlayers()) do
+               if player.Character and player.Character:FindFirstChild("ESPHighlight") then
+                   player.Character.ESPHighlight:Destroy()
+               end
+           end
+       end
+   end,
+})
+
+-- 2. ตัวเลือกปรับสีมองทะลุ (Color Picker)
+ESPTab:CreateColorPicker({
+    Name = "ปรับสี ESP (Color Picker)",
+    Color = Color3.fromRGB(255, 0, 0),
+    Flag = "ESPColorPicker",
+    Callback = function(Value)
+        ESPColor = Value
+        -- อัปเดตสีให้ผู้เล่นทุกคนทันที
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("ESPHighlight") then
+                player.Character.ESPHighlight.FillColor = ESPColor
+            end
+        end
+    end
+})
