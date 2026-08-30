@@ -1,0 +1,149 @@
+-- GUI Toggle Magnet & Auto Click for Delta
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local MagnetBtn = Instance.new("TextButton")
+local AutoClickBtn = Instance.new("TextButton")
+local OpenCloseBtn = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+
+-- ตัวแปรสถานะ
+local MagnetActive = false
+local AutoClickActive = false
+
+-- ตั้งค่า ScreenGui
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "MiningHubGUI"
+
+-- 1. ปุ่มวงกลมเล็กสำหรับเปิด/ปิดเมนู (ลากไปมาได้)
+OpenCloseBtn.Parent = ScreenGui
+OpenCloseBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
+OpenCloseBtn.Size = UDim2.new(0, 50, 0, 50)
+OpenCloseBtn.Text = "MENU"
+OpenCloseBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+OpenCloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenCloseBtn.Font = Enum.Font.SourceSansBold
+OpenCloseBtn.TextSize = 14
+OpenCloseBtn.Draggable = true
+
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.CornerRadius = UDim.new(1, 0)
+OpenCorner.Parent = OpenCloseBtn
+
+-- 2. หน้าต่างเมนูหลัก
+MainFrame.Parent = ScreenGui
+MainFrame.Position = UDim2.new(0.3, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 220, 0, 170)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = true
+
+local FrameCorner = Instance.new("UICorner")
+FrameCorner.CornerRadius = UDim.new(0, 10)
+FrameCorner.Parent = MainFrame
+
+-- หัวข้อ GUI
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "⛏️ Mining Clicker Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.SourceSansBold
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 10)
+TitleCorner.Parent = Title
+
+-- 3. ปุ่มกดดึงแร่ (Magnet)
+MagnetBtn.Parent = MainFrame
+MagnetBtn.Position = UDim2.new(0.1, 0, 0.28, 0)
+MagnetBtn.Size = UDim2.new(0.8, 0, 0.28, 0)
+MagnetBtn.Text = "🧲 ดึงแร่ : OFF"
+MagnetBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+MagnetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MagnetBtn.Font = Enum.Font.SourceSansBold
+MagnetBtn.TextSize = 15
+
+local Btn1Corner = Instance.new("UICorner")
+Btn1Corner.Parent = MagnetBtn
+
+-- 4. ปุ่มกดออโต้คลิก (Auto Click)
+AutoClickBtn.Parent = MainFrame
+AutoClickBtn.Position = UDim2.new(0.1, 0, 0.62, 0)
+AutoClickBtn.Size = UDim2.new(0.8, 0, 0.28, 0)
+AutoClickBtn.Text = "⚡ ออโต้คลิก : OFF"
+AutoClickBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+AutoClickBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoClickBtn.Font = Enum.Font.SourceSansBold
+AutoClickBtn.TextSize = 15
+
+local Btn2Corner = Instance.new("UICorner")
+Btn2Corner.Parent = AutoClickBtn
+
+-- ================= ระบบการทำงาน =================
+
+-- สลับการแสดงผลเมนู
+OpenCloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- กดปุ่มดึงแร่
+MagnetBtn.MouseButton1Click:Connect(function()
+    MagnetActive = not MagnetActive
+    if MagnetActive then
+        MagnetBtn.Text = "🧲 ดึงแร่ : ON"
+        MagnetBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 40)
+    else
+        MagnetBtn.Text = "🧲 ดึงแร่ : OFF"
+        MagnetBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+-- กดปุ่มออโต้คลิก
+AutoClickBtn.MouseButton1Click:Connect(function()
+    AutoClickActive = not AutoClickActive
+    if AutoClickActive then
+        AutoClickBtn.Text = "⚡ ออโต้คลิก : ON"
+        AutoClickBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 40)
+    else
+        AutoClickBtn.Text = "⚡ ออโต้คลิก : OFF"
+        AutoClickBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end)
+
+-- ลูปดึงแร่
+task.spawn(function()
+    while task.wait(0.1) do
+        if MagnetActive then
+            local char = game.Players.LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local hrp = char.HumanoidRootPart
+                for _, item in pairs(workspace:GetDescendants()) do
+                    if item:IsA("BasePart") and not item:IsDescendantOf(char) then
+                        local name = item.Name:lower()
+                        if name:find("ore") or name:find("gem") or name:find("coin") or name:find("drop") or item.Parent.Name:lower():find("ore") then
+                            item.Anchored = false
+                            item.CanCollide = false
+                            item.CFrame = hrp.CFrame
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ลูปออโต้คลิก
+task.spawn(function()
+    while task.wait(0.01) do
+        if AutoClickActive then
+            for _, v in pairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+                if v:IsA("RemoteEvent") and (v.Name:lower():find("click") or v.Name:lower():find("mine") or v.Name:lower():find("tap")) then
+                    v:FireServer()
+                end
+            end
+        end
+    end
+end)
