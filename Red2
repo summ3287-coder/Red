@@ -1,0 +1,229 @@
+-- Delta Universal Ultimate Hub
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleButton = Instance.new("TextButton")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local Sidebar = Instance.new("Frame")
+local Content = Instance.new("Frame")
+
+-- Setup GUI
+ScreenGui.Parent = game:GetService("CoreGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+-- 1. ปุ่มเปิด/ปิด เมนูหลัก
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+ToggleButton.Position = UDim2.new(0, 10, 0.3, 0)
+ToggleButton.Size = UDim2.new(0, 70, 0, 35)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "OPEN HUB"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+Instance.new("UICorner", ToggleButton)
+
+-- 2. ตัวแผงเมนูหลัก (ลากย้ายตำแหน่งได้)
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 420, 0, 260)
+MainFrame.Draggable = true
+MainFrame.Active = true
+Instance.new("UICorner", MainFrame)
+
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "DELTA ULTIMATE HUB v1.0"
+Title.TextColor3 = Color3.fromRGB(0, 255, 150)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 16
+
+-- แถบข้าง (Sidebar) สำหรับเลือกหมวดหมู่
+Sidebar.Parent = MainFrame
+Sidebar.Position = UDim2.new(0, 5, 0, 35)
+Sidebar.Size = UDim2.new(0, 110, 1, -40)
+Sidebar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", Sidebar)
+
+-- พื้นที่แสดงปุ่มฟังก์ชัน (Content)
+Content.Parent = MainFrame
+Content.Position = UDim2.new(0, 120, 0, 35)
+Content.Size = UDim2.new(1, -125, 1, -40)
+Content.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", Content)
+
+-- สลับการเปิด/ปิด เมนู
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+--------------------------------------------------
+-- ระบบการเปลี่ยนหมวดหมู่ (Tab System)
+--------------------------------------------------
+local Tabs = {}
+
+local function createTab(name, pos)
+    local TabBtn = Instance.new("TextButton", Sidebar)
+    TabBtn.Size = UDim2.new(1, -10, 0, 30)
+    TabBtn.Position = UDim2.new(0, 5, 0, pos)
+    TabBtn.Text = name
+    TabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TabBtn.Font = Enum.Font.SourceSans
+    Instance.new("UICorner", TabBtn)
+    
+    local TabFrame = Instance.new("ScrollingFrame", Content)
+    TabFrame.Size = UDim2.new(1, 0, 1, 0)
+    TabFrame.BackgroundTransparency = 1
+    TabFrame.Visible = false
+    TabFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
+    
+    TabBtn.MouseButton1Click:Connect(function()
+        for _, tab in pairs(Tabs) do tab.Visible = false end
+        TabFrame.Visible = true
+    end)
+    
+    table.insert(Tabs, TabFrame)
+    return TabFrame
+end
+
+-- สร้างหน้าต่างแต่ละหมวดหมู่
+local MovementTab = createTab("Movement", 5)
+local VisualsTab  = createTab("ESP / Visuals", 40)
+local CombatTab   = createTab("Combat / Auto", 75)
+local MiscTab     = createTab("Misc / Server", 110)
+
+MovementTab.Visible = true -- เปิดหน้าแรกไว้เสมอ
+
+--------------------------------------------------
+-- ฟังก์ชันช่วยสร้างปุ่มกด
+--------------------------------------------------
+local function createButton(tab, text, yPos, callback)
+    local btn = Instance.new("TextButton", tab)
+    btn.Size = UDim2.new(0.9, 0, 0, 30)
+    btn.Position = UDim2.new(0.05, 0, 0, yPos)
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSans
+    Instance.new("UICorner", btn)
+    btn.MouseButton1Click:Connect(callback)
+end
+
+--------------------------------------------------
+-- 1. หมวดหมู่ MOVEMENT (เคลื่อนที่)
+--------------------------------------------------
+local function getHumanoid()
+    return game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+end
+
+createButton(MovementTab, "Speed Boost (WalkSpeed 80)", 5, function()
+    if getHumanoid() then getHumanoid().WalkSpeed = 80 end
+end)
+
+createButton(MovementTab, "Super Jump (JumpPower 150)", 40, function()
+    local hum = getHumanoid()
+    if hum then hum.UseJumpPower = true; hum.JumpPower = 150 end
+end)
+
+createButton(MovementTab, "Toggle Noclip (เดินทะลุกำแพง)", 75, function()
+    _G.Noclip = not _G.Noclip
+    game:GetService("RunService").Stepped:Connect(function()
+        if _G.Noclip and game.Players.LocalPlayer.Character then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
+            end
+        end
+    end)
+end)
+
+createButton(MovementTab, "Fly Script (บิน)", 110, function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOKICK/XNEO/main/Fly.lua"))()
+end)
+
+createButton(MovementTab, "Reset Movement (ปกติ)", 145, function()
+    _G.Noclip = false
+    local hum = getHumanoid()
+    if hum then hum.WalkSpeed = 16; hum.JumpPower = 50 end
+end)
+
+--------------------------------------------------
+-- 2. หมวดหมู่ VISUALS (มองทะลุ / ESP)
+--------------------------------------------------
+createButton(VisualsTab, "Player ESP (กล่องส่องคน)", 5, function()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer and player.Character and not player.Character:FindFirstChild("Highlight") then
+            local hl = Instance.new("Highlight", player.Character)
+            hl.FillColor = Color3.fromRGB(255, 0, 0)
+        end
+    end
+end)
+
+createButton(VisualsTab, "Fullbright (แมพสว่าง)", 40, function()
+    game:GetService("Lighting").Brightness = 2
+    game:GetService("Lighting").ClockTime = 14
+    game:GetService("Lighting").GlobalShadows = false
+end)
+
+--------------------------------------------------
+-- 3. หมวดหมู่ COMBAT / AUTO (ต่อสู้ / ช่วยเล่น)
+--------------------------------------------------
+createButton(CombatTab, "Auto Clicker (คลิกรวดเร็ว)", 5, function()
+    _G.AutoClick = not _G.AutoClick
+    while _G.AutoClick do
+        local VirtualUser = game:GetService("VirtualUser")
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton1(Vector2.new())
+        task.wait(0.05)
+    end
+end)
+
+createButton(CombatTab, "Aimbot (ล็อคหัวคนใกล้สุด)", 40, function()
+    local Camera = workspace.CurrentCamera
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    
+    local function getClosestPlayer()
+        local closest = nil
+        local maxDist = math.huge
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("Head") then
+                local dist = (v.Character.Head.Position - LocalPlayer.Character.Head.Position).Magnitude
+                if dist < maxDist then
+                    maxDist = dist
+                    closest = v
+                end
+            end
+        end
+        return closest
+    end
+    
+    game:GetService("RunService").RenderStepped:Connect(function()
+        local target = getClosestPlayer()
+        if target and target.Character then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
+        end
+    end)
+end)
+
+--------------------------------------------------
+-- 4. หมวดหมู่ MISC / SERVER (ทั่วไป)
+--------------------------------------------------
+createButton(MiscTab, "Rejoin Server (เข้าเซิร์ฟใหม่)", 5, function()
+    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+end)
+
+createButton(MiscTab, "Anti-AFK (กันหลุด)", 40, function()
+    local vu = game:GetService("VirtualUser")
+    game:GetService("Players").LocalPlayer.Idled:Connect(function()
+        vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+        task.wait(1)
+        vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+    end)
+end)
+
+createButton(MiscTab, "Infinite Yield (เมนูคำสั่งเพิ่ม)", 75, function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end)
+             
